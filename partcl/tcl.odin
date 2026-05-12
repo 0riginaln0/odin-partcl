@@ -33,23 +33,39 @@ foreign lib {
 	eval  :: proc(tcl: ^Tcl, script: cstring, script_len: c.size_t) -> Control_Flow --- // Evaluate script
 	subst :: proc(tcl: ^Tcl, s: cstring, len: c.size_t) -> Control_Flow ---
 
-	string :: proc(v: Value) -> cstring --- // Returns the raw C string of a tcl.result value
+
+	/* Raw string values */
+
+
+	alloc  :: proc(s: cstring, len: c.size_t) -> Value ---
+	dup    :: proc(v: Value) -> Value ---
+	append :: proc(v: Value, tail: Value) -> Value ---
 	length :: proc(v: Value) -> c.int --- // Returns the length of a tcl.result value's string
 	free   :: proc(v: Value) --- // Frees a Tcl value returned by the library.
+
+
+	/* Helpers to access raw string or numeric value */
+
+
 	int    :: proc(v: Value) -> c.int --- // Converts a Tcl value to an integer
+	string :: proc(v: Value) -> cstring --- // Returns the raw C string of a tcl.result value
 
-	alloc :: proc(s: cstring, len: c.size_t) -> Value ---
-	dup   :: proc(v: Value) -> Value ---
-	append :: proc(v: Value, tail: Value) -> Value ---
 
-	list_alloc   :: proc() -> Value ---
-	list_append  :: proc(v: Value, tail: Value) -> Value ---
-	list_at      :: proc(v: Value, index: c.int) -> Value ---
-	list_length  :: proc(v: Value) -> c.int ---
-	list_free    :: proc(v: Value) ---
+	/* List values */
+
+
+	list_alloc  :: proc() -> Value ---
+	list_append :: proc(v: Value, tail: Value) -> Value ---
+	list_at     :: proc(v: Value, index: c.int) -> Value ---
+	list_length :: proc(v: Value) -> c.int ---
+	list_free   :: proc(v: Value) ---
+
 
 	var :: proc(tcl: ^Tcl, name: Value, value: Value) -> Value ---
 
+	
 	register :: proc(tcl: ^Tcl, name: cstring, fn: Cmd_Fn, arity: c.int, arg: rawptr) --- // Registers a new native Tcl command.
+	
+	
 	result :: proc(tcl: ^Tcl, flow: Control_Flow, value: Value) -> Control_Flow --- // Sets the interpreter's result value and returns a flow control code.
 }

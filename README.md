@@ -1,5 +1,8 @@
 # partcl-odin
 
+Odin bindings for the [ParTcl](https://github.com/zserge/partcl) -  a micro Tcl implementation. The [blogpost](https://zserge.com/posts/tcl-interpreter/) of the ParTcl author.
+
+
 1. Compile tcl.c into static library:
 
 ```sh
