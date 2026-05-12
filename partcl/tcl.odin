@@ -1,7 +1,10 @@
 package partcl
 
 import "core:c"
-foreign import lib "libpartcl.a"
+
+
+when ODIN_OS == .Windows do foreign import lib "windows/libpartcl.a"
+when ODIN_OS == .Linux do foreign import lib "linux/libpartcl.a"
 
 Tcl :: struct {
 	env:    rawptr,
