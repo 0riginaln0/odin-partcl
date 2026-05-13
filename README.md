@@ -65,6 +65,11 @@ custom_command :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -
 
 4. Reference REPL implementation [repl.odin](/repl/repl.odin)
 
+
+```powershell
+> odin run repl
+```
+
 ```sh
 $ rlwrap odin run repl
 ```
