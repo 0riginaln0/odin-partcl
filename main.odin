@@ -6,6 +6,7 @@ import "partcl"
 
 main :: proc() {
 	ctx: partcl.Tcl
+
 	partcl.init(&ctx)
 	defer partcl.destroy(&ctx)
 
