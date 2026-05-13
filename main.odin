@@ -146,7 +146,7 @@ subst $result
 	eval_and_print(&ctx, `
 	proc somecommand {} {
 		puts "hello from some command"
-		success
+		return success
 	};
 	set a some
 	set b command
