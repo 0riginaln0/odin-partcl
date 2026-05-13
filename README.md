@@ -58,4 +58,6 @@ custom_command :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -
 }
 ```
 
-3. Check the [main.odin](/main.odin) for more or less full ParTcl overview.
+3. More or less full ParTcl overview [main.odin](/main.odin).
+
+4. Reference REPL implementation [repl.odin](/repl/repl.odin)
