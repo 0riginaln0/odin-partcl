@@ -31,7 +31,11 @@ eval_and_print :: proc(ctx: ^partcl.Tcl, script: cstring, desc: string) {
 	}
 }
 
-custom_command :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {
+custom_command :: proc "c" (
+	tcl: ^partcl.Tcl,
+	args: partcl.Value,
+	arg: rawptr,
+) -> partcl.Control_Flow {
 	context = runtime.default_context()
 	fmt.println("Custom command called from Tcl!")
 	return .FNORMAL
@@ -75,6 +79,10 @@ main :: proc() {
 	eval_and_print(&ctx, `square 7;`, "call square 7")
 	eval_and_print(&ctx, `proc sum {a b} { + $a $b };`, "define sum")
 	eval_and_print(&ctx, `sum 25 44;`, "call sum 25 44")
+	eval_and_print(&ctx, `proc sum {a b} {
+			return [+ $a $b]
+		};`, "define sum multiline")
+	eval_and_print(&ctx, `sum 25 44;`, "call multiline sum 25 44")
 	eval_and_print(&ctx, `proc local_var {} { set l 5; subst $l };`, "local variable")
 	eval_and_print(&ctx, `local_var;`, "call, should print 5")
 	eval_and_print(&ctx, `set l;`, "check global l (should be empty)")
@@ -84,18 +92,32 @@ main :: proc() {
 	eval_and_print(&ctx, `if {== $cond 1} {subst true} {subst false};`, "if-else")
 	eval_and_print(&ctx, `set cond 0;`, "set cond = 0")
 	eval_and_print(&ctx, `if {== $cond 1} {subst true} {subst false};`, "if-else again")
-	//                     if cond      true        elseif cond     true          else
-	eval_and_print(&ctx, `if {< 1 2} {puts "less"}   {== 1 1}    {puts equal} {puts greater};`, "if-then-elseif-then-else chain")
+	eval_and_print(
+		&ctx,
+		//  if cond      true        elseif cond     true          else
+		`if {< 1 2} {puts "less"}   {== 1 1}    {puts equal} {puts greater};`,
+		"if-then-elseif-then-else chain",
+	)
 	eval_and_print(&ctx, `if {> 10 5} { subst "greater" };`, "if without else")
 	eval_and_print(&ctx, `if {> 10 20} { subst "greater" };`, "if false without else returns 0")
 
 	// -------- 6. while loop with break/continue --------
 	eval_and_print(&ctx, `set i 0;`, "init i")
-	eval_and_print(&ctx, `while {< $i 5} { puts "i = $i"; set i [+ $i 1] };`, "while loop counting to 5")
+	eval_and_print(
+		&ctx,
+		`while {< $i 5} { puts "i = $i"; set i [+ $i 1] };`,
+		"while loop counting to 5",
+	)
 	eval_and_print(&ctx, `set i 0;`, "reset i")
-	eval_and_print(&ctx, `while {< $i 10} { set i [+ $i 1]; if {== $i 5} { puts "i = $i"; break } };`, "while with break at 5")
+	eval_and_print(
+		&ctx,
+		`while {< $i 10} { set i [+ $i 1]; if {== $i 5} { puts "i = $i"; break } };`,
+		"while with break at 5",
+	)
 	eval_and_print(&ctx, `set i 0; set result "";`, "init for continue demo")
-	eval_and_print(&ctx, `
+	eval_and_print(
+		&ctx,
+		`
 while {< $i 5} {
 	set i [+ $i 1]
 	if {== $i 3} {
@@ -104,10 +126,14 @@ while {< $i 5} {
 	set result "$result $i"
 }
 subst $result
-`, "while with continue (skip 3)")
+`,
+		"while with continue (skip 3)",
+	)
 
 	// -------- 7. return command --------
-	eval_and_print(&ctx, `
+	eval_and_print(
+		&ctx,
+		`
 	proc retval {} {
 		set i 0;
 		while {< $i 5} {
@@ -116,9 +142,11 @@ subst $result
 				return $i
 			}
 		}
-		condition_was_not_triggered
+		return condition_was_not_triggered
 	}
-	retval;`, "retval 3")
+	retval;`,
+		"retval 3",
+	)
 
 	// -------- 8. math operators (prefix) --------
 	eval_and_print(&ctx, `+ 1 2;`, "addition")
@@ -131,26 +159,50 @@ subst $result
 	eval_and_print(&ctx, `>= 1 1;`, "greater or equal")
 	eval_and_print(&ctx, `== 1 1;`, "equal")
 	eval_and_print(&ctx, `!= 1 1;`, "not equal")
-	eval_and_print(&ctx, `set a 5; set b 7; subst [- [* 4 [+ $a $b]] 6];`, "nested math: 4*(5+7)-6 = 42")
+	eval_and_print(
+		&ctx,
+		`set a 5; set b 7; subst [- [* 4 [+ $a $b]] 6];`,
+		"nested math: 4*(5+7)-6 = 42",
+	)
 
 	// -------- 9. Braces --------
-	eval_and_print(&ctx, `set literal {this is {braced} text with $no substitution};`, "braced literal")
-	eval_and_print(&ctx, `subst $literal;`, "subst on braced literal (no variable expansion inside braces)")
+	eval_and_print(
+		&ctx,
+		`set literal {this is {braced} text with $no substitution};`,
+		"braced literal",
+	)
+	eval_and_print(
+		&ctx,
+		`subst $literal;`,
+		"subst on braced literal (no variable expansion inside braces)",
+	)
 
 	// -------- 10. Command substitution and concatenation --------
 	eval_and_print(&ctx, `set name "world";`, "set name")
 	eval_and_print(&ctx, `subst "Hello [set name]!";`, "command substitution inside quotes")
 	eval_and_print(&ctx, `subst "Result: [+ 5 3]";`, "math inside command substitution")
-	eval_and_print(&ctx, `set x 10; set y 20; subst "Sum = [* $x $y]";`, "nested variables and command sub")
-	eval_and_print(&ctx, `set prefix "Hello"; set suffix "World"; subst $prefix$suffix;`, "implicit concatenation")
-	eval_and_print(&ctx, `
+	eval_and_print(
+		&ctx,
+		`set x 10; set y 20; subst "Sum = [* $x $y]";`,
+		"nested variables and command sub",
+	)
+	eval_and_print(
+		&ctx,
+		`set prefix "Hello"; set suffix "World"; subst $prefix$suffix;`,
+		"implicit concatenation",
+	)
+	eval_and_print(
+		&ctx,
+		`
 	proc somecommand {} {
 		puts "hello from some command"
 		return success
 	};
 	set a some
 	set b command
-	$a$b;`, "call command via concatenated name")
+	$a$b;`,
+		"call command via concatenated name",
+	)
 
 	// -------- 11. Custom command --------
 	partcl.register(&ctx, "custom_cmd", custom_command, 0, nil)
