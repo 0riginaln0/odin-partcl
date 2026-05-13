@@ -5,10 +5,6 @@ Odin bindings for the [ParTcl](https://github.com/zserge/partcl) -  a micro Tcl 
 References:
 - The [post](https://zserge.com/posts/tcl-interpreter/) of the ParTcl author.
 
-## My modifications to ParTcl
-
-- Division by zero now safely returns 0 instead of crashing
-
 ## Tutorial
 
 
