@@ -16,7 +16,7 @@ Odin bindings for the [ParTcl](https://github.com/zserge/partcl) -  a micro Tcl 
 cd tcl
 ```
 ```sh
-gcc -c -std=c99 -Os tcl.c -o tcl.o && ar rcs libpartcl.a tcl.o
+gcc -c -std=c99 -O3 tcl.c -o tcl.o && ar rcs libpartcl.a tcl.o
 ```
 
 MINGW64 shell was used to compile the ParTcl on Windows.
