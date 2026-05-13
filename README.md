@@ -58,7 +58,7 @@ custom_command :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -
 
 3. More or less full ParTcl overview [main.odin](/main.odin).
 
-4. Reference REPL implementation [repl.odin](/repl/repl.odin)
+4. Reference REPL implementation [repl.odin](/repl/repl.odin). Has some native commands registration examples.
 
 
 ```powershell
