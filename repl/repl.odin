@@ -1,16 +1,48 @@
 // $ rlwrap odin run repl
 package main
 
+import "base:runtime"
 import "../partcl"
 import "core:bufio"
 import "core:fmt"
 import "core:os"
 import "core:strings"
 
+// Truthy values are all values except for "0" and empty string ""
+cmd_true :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {	
+	val := partcl.list_at(args, 1)
+	defer partcl.free(val)
+	
+	truthy: bool
+	s := partcl.string(val)
+	if s == "" || s == "0" {
+		truthy = false
+	} else {
+		truthy = true
+	}
+
+	return partcl.result(tcl, .FNORMAL, partcl.alloc(truthy ? "1" : "0", 1))
+}
+
+// I want to compare values, not only mathematical
+cmd_equal :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {	
+	val1 := partcl.list_at(args, 1)
+	val2 := partcl.list_at(args, 2)
+	defer partcl.free(val1)
+	defer partcl.free(val2)
+
+	equal := partcl.string(val1) == partcl.string(val2)
+
+	return partcl.result(tcl, .FNORMAL, partcl.alloc(equal ? "1" : "0", 1))
+}
+
 main :: proc() {
 	ctx: partcl.Tcl
 	partcl.init(&ctx)
 	defer partcl.destroy(&ctx)
+
+	partcl.register(&ctx, "true?", cmd_true, 2, nil)
+	partcl.register(&ctx, "equal?", cmd_equal, 3, nil)
 
 	stdin_stream := os.to_stream(os.stdin)
 	scanner: bufio.Scanner

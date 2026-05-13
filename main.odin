@@ -205,7 +205,7 @@ subst $result
 	)
 
 	// -------- 11. Custom command --------
-	partcl.register(&ctx, "custom_cmd", custom_command, 0, nil)
+	partcl.register(&ctx, "custom_cmd", custom_command, 1, nil)
 	eval_and_print(&ctx, `custom_cmd;`, "calling custom command")
 
 	// -------- 12. Error handling demo --------

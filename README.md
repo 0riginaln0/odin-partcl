@@ -39,7 +39,7 @@ main :: proc() {
 	partcl.init(&ctx)
 	defer partcl.destroy(&ctx)
 
-	partcl.register(&ctx, "custom_command", custom_command, 0, nil)
+	partcl.register(&ctx, "custom_command", custom_command, 1, nil)
 
 	script: cstring = `custom_command; set x 4; puts [+ [* $x 10] 2];`
 	result := partcl.eval(&ctx, script, len(script))
