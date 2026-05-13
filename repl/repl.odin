@@ -1,3 +1,4 @@
+// $ rlwrap odin run repl
 package main
 
 import "../partcl"
@@ -40,6 +41,11 @@ main :: proc() {
 				fmt.println(string(result_str), result_len)
 			} else {
 				fmt.println("Error evaluating script")
+				err_str := partcl.string(ctx.result)
+				err_len := partcl.length(ctx.result)
+				if err_len > 0 {
+					fmt.print("Error message: \"", string(err_str), "\"\n")
+				}
 			}
 
 			strings.builder_reset(&script_builder)
