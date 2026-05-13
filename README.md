@@ -3,6 +3,13 @@
 Odin bindings for the [ParTcl](https://github.com/zserge/partcl) -  a micro Tcl implementation. The [blogpost](https://zserge.com/posts/tcl-interpreter/) of the ParTcl author.
 
 
+## My modifications to ParTcl
+
+- Division by zero now safely returns 0 instead of crashing
+
+## Tutorial
+
+
 1. Compile tcl.c into static library:
 
 ```sh
@@ -50,3 +57,5 @@ custom_command :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -
 	return .FNORMAL
 }
 ```
+
+3. Check the [main.odin](/main.odin) for more or less full ParTcl overview.

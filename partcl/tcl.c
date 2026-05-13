@@ -559,7 +559,8 @@ static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
   } else if (op[0] == '*') {
     c = a * b;
   } else if (op[0] == '/') {
-    c = a / b;
+    // Division by zero? Result is zero, not a "core dumped".
+    c = (b == 0) ? 0 : a / b;
   } else if (op[0] == '>' && op[1] == '\0') {
     c = a > b;
   } else if (op[0] == '>' && op[1] == '=') {
