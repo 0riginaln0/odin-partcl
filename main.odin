@@ -157,10 +157,25 @@ subst $result
 	eval_and_print(&ctx, `custom_cmd;`, "calling custom command")
 
 	// -------- 12. Error handling demo --------
-	fmt.println("\n--- Error handling demo ---")
+	fmt.println("\n--- Error non-existing cmd ---")
 	bad_script: cstring = `non-existing-cmd;`
 	fmt.println("Script:", bad_script)
 	result := partcl.eval(&ctx, bad_script, len(bad_script))
+	if result == .FERROR {
+		fmt.println("Expected error evaluating script")
+		err_str := partcl.string(ctx.result)
+		err_len := partcl.length(ctx.result)
+		if err_len > 0 {
+			fmt.println("Error message: \"", string(err_str), "\"")
+		}
+	} else {
+		fmt.println("Unexpected success")
+	}
+
+	fmt.println("\n--- Error division by zero ---")
+	bad_script = `/ 1 0;`
+	fmt.println("Script:", bad_script)
+	result = partcl.eval(&ctx, bad_script, len(bad_script))
 	if result == .FERROR {
 		fmt.println("Expected error evaluating script")
 		err_str := partcl.string(ctx.result)

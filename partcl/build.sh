@@ -1,0 +1,1 @@
+gcc -c -std=c99 -O3 tcl.c -o tcl.o && ar rcs libpartcl.a tcl.o

@@ -4,8 +4,7 @@ Odin bindings for the [ParTcl](https://github.com/zserge/partcl) -  a micro Tcl 
 
 References:
 - The [post](https://zserge.com/posts/tcl-interpreter/) of the ParTcl author.
-- [Tcl the Misunderstood](https://antirez.com/articoli/tclmisunderstood.html) article. Interesting article with "Tcl in five minutes" part.
-
+- [Tcl the Misunderstood](https://antirez.com/articoli/tclmisunderstood.html) article.
 
 ## My modifications to ParTcl
 
