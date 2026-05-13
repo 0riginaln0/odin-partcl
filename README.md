@@ -1,6 +1,10 @@
 # partcl-odin
 
-Odin bindings for the [ParTcl](https://github.com/zserge/partcl) -  a micro Tcl implementation. The [blogpost](https://zserge.com/posts/tcl-interpreter/) of the ParTcl author.
+Odin bindings for the [ParTcl](https://github.com/zserge/partcl) -  a micro Tcl implementation.
+
+References:
+- The [post](https://zserge.com/posts/tcl-interpreter/) of the ParTcl author.
+- [Tcl the Misunderstood](https://antirez.com/articoli/tclmisunderstood.html) article.
 
 
 ## My modifications to ParTcl
