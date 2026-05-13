@@ -1,18 +1,19 @@
 // $ rlwrap odin run repl
 package main
 
-import "base:runtime"
 import "../partcl"
+import "base:runtime"
 import "core:bufio"
 import "core:fmt"
+import "core:mem"
 import "core:os"
 import "core:strings"
 
 // Truthy values are all values except for "0" and empty string ""
-cmd_true :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {	
+cmd_true :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {
 	val := partcl.list_at(args, 1)
 	defer partcl.free(val)
-	
+
 	truthy: bool
 	s := partcl.string(val)
 	if s == "" || s == "0" {
@@ -25,7 +26,7 @@ cmd_true :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> part
 }
 
 // I want to compare values, not only mathematical
-cmd_equal :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {	
+cmd_equal :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {
 	val1 := partcl.list_at(args, 1)
 	val2 := partcl.list_at(args, 2)
 	defer partcl.free(val1)
@@ -36,26 +37,60 @@ cmd_equal :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> par
 	return partcl.result(tcl, .FNORMAL, partcl.alloc(equal ? "1" : "0", 1))
 }
 
+// Set your favourite prompt!
+//  >
+//  =>
+//  $
+//  %
+//  >>>
+//  partcl>
+cmd_change_prompt :: proc "c" (
+	tcl: ^partcl.Tcl,
+	args: partcl.Value,
+	arg: rawptr,
+) -> partcl.Control_Flow {
+	new_prompt_val := partcl.list_at(args, 1)
+	defer partcl.free(new_prompt_val)
+
+	context = runtime.default_context()
+	new_prompt_odin := strings.clone_from_cstring(partcl.string(new_prompt_val))
+
+	prompt_ptr := cast(^string)arg
+	prompt_ptr^ = new_prompt_odin
+
+	return partcl.result(tcl, .FNORMAL, partcl.alloc("", 0))
+}
+
+prompt: string = ">"
+
 main :: proc() {
+	track: mem.Tracking_Allocator; mem.tracking_allocator_init(&track, context.allocator)
+	temp_track: mem.Tracking_Allocator; mem.tracking_allocator_init(&temp_track, context.temp_allocator)
+	context.allocator = mem.tracking_allocator(&track)
+	context.temp_allocator = mem.tracking_allocator(&temp_track)
+	defer review_tracking_allocators(&track, &temp_track)
+
 	ctx: partcl.Tcl
 	partcl.init(&ctx)
 	defer partcl.destroy(&ctx)
 
 	partcl.register(&ctx, "true?", cmd_true, 2, nil)
 	partcl.register(&ctx, "equal?", cmd_equal, 3, nil)
+	partcl.register(&ctx, "change-prompt", cmd_change_prompt, 2, &prompt)
 
 	stdin_stream := os.to_stream(os.stdin)
 	scanner: bufio.Scanner
 	bufio.scanner_init(&scanner, stdin_stream, context.temp_allocator)
-	defer bufio.scanner_destroy(&scanner)
 
 	script_builder: strings.Builder
 	strings.builder_init(&script_builder)
+	defer strings.builder_destroy(&script_builder)
 
 	fmt.println("Enter text (type 'q' to quit). Empty line executes script.")
 
 	for {
-		fmt.printf("> ")
+		defer free_all(context.temp_allocator)
+		fmt.printf("%s ", prompt)
 
 		if !bufio.scanner_scan(&scanner) do break
 
@@ -90,4 +125,34 @@ main :: proc() {
 	if err := bufio.scanner_error(&scanner); err != nil {
 		fmt.eprintfln("Error scanning input: %v", err)
 	}
+}
+
+review_tracking_allocators :: proc(track, temp_track: ^mem.Tracking_Allocator) {
+	if len(track.allocation_map) > 0 {
+		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+		for _, entry in track.allocation_map {
+			fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+		}
+	}
+	if len(track.bad_free_array) > 0 {
+		fmt.eprintf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
+		for entry in track.bad_free_array {
+			fmt.eprintf("- %p @ %v\n", entry.memory, entry.location)
+		}
+	}
+	mem.tracking_allocator_destroy(track)
+
+	if len(temp_track.allocation_map) > 0 {
+		fmt.eprintf("=== %v temp allocations not freed:!!! ===\n", len(temp_track.allocation_map))
+		for _, entry in temp_track.allocation_map {
+			fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+		}
+	}
+	if len(temp_track.bad_free_array) > 0 {
+		fmt.eprintf("=== %v temp incorrect frees: ===\n", len(temp_track.bad_free_array))
+		for entry in temp_track.bad_free_array {
+			fmt.eprintf("- %p @ %v\n", entry.memory, entry.location)
+		}
+	}
+	mem.tracking_allocator_destroy(temp_track)
 }
