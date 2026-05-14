@@ -7,8 +7,8 @@ import "core:bufio"
 import "core:fmt"
 import "core:mem"
 import "core:os"
-import "core:strings"
 import "core:strconv"
+import "core:strings"
 
 // Truthy values are all values except for "0" and empty string ""
 cmd_true :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {
@@ -93,15 +93,15 @@ cmd_fmath :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> par
 	switch cmd {
 		case "+.": res = a + b
 		case "-.": res = a - b
+		case "*.": res = a * b
 		case "/.":
 			if b == 0 {
 				return partcl.result(tcl, .FERROR, partcl.alloc("division by zero", 16))
 			}
 			res = a / b
-		case "*.": res = a * b
-		case ">.": bool_result = a > b; is_comparison = true
+		case ">.":  bool_result = a > b;  is_comparison = true
+		case "<.":  bool_result = a < b;  is_comparison = true
 		case ">=.": bool_result = a >= b; is_comparison = true
-		case "<.": bool_result = a < b; is_comparison = true
 		case "<=.": bool_result = a <= b; is_comparison = true
 		case "==.": bool_result = a == b; is_comparison = true
 		case "!=.": bool_result = a != b; is_comparison = true
@@ -110,7 +110,6 @@ cmd_fmath :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> par
 	if is_comparison {
 		return partcl.result(tcl, .FNORMAL, partcl.alloc(bool_result ? "1" : "0", 1))
 	}
-	
 	context = runtime.default_context()
 	n := fmt.bprintf(buf[:], "%g", res)
 	fmt.println(n, len(n))
@@ -132,16 +131,16 @@ main :: proc() {
 	partcl.register(&ctx, "equal?", cmd_equal, 3, nil)
 	partcl.register(&ctx, "change-prompt", cmd_change_prompt, 2, &prompt)
 
-  partcl.register(&ctx, "+.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, "-.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, "*.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, "/.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, ">.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, ">=.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, "<.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, "<=.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, "==.", cmd_fmath, 3, nil)
-  partcl.register(&ctx, "!=.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "+.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "-.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "*.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "/.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, ">.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, ">=.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "<.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "<=.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "==.", cmd_fmath, 3, nil)
+	partcl.register(&ctx, "!=.", cmd_fmath, 3, nil)
 
 	stdin_stream := os.to_stream(os.stdin)
 	scanner: bufio.Scanner

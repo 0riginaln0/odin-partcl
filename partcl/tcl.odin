@@ -67,6 +67,7 @@ foreign lib {
 
 	/* Miscellaneous */
 	
+	
 	var :: proc(tcl: ^Tcl, name: Value, value: Value) -> Value ---
 	
 	

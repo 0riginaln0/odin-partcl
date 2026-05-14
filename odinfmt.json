@@ -1,0 +1,7 @@
+{
+	"$schema": "https://raw.githubusercontent.com/DanielGavin/ols/master/misc/odinfmt.schema.json",
+	"tabs": true,
+	"tabs_width": 2,
+  "ident_cases": true,
+	"inline_single_stmt_case": true
+}
