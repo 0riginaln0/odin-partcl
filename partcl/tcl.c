@@ -589,7 +589,7 @@ void tcl_destroy(struct tcl* tcl) {
     struct tcl_cmd* cmd = tcl->cmds;
     tcl->cmds = tcl->cmds->next;
     tcl_free(cmd->name);
-    free(cmd->arg);
+    // free(cmd->arg); // Do we really need it?
     free(cmd);
   }
   tcl_free(tcl->result);

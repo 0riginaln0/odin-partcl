@@ -12,12 +12,12 @@ eval_and_print :: proc(ctx: ^partcl.Tcl, script: cstring, desc: string) {
 
 	switch result_code {
 	case .FNORMAL:
-		res_str := partcl.string(ctx.result)
+		res_str := partcl.to_string(ctx.result)
 		res_len := partcl.length(ctx.result)
 		fmt.printfln("Result: %s", string(res_str))
 	case .FERROR:
 		fmt.print("Error evaluating script\n")
-		err_str := partcl.string(ctx.result)
+		err_str := partcl.to_string(ctx.result)
 		err_len := partcl.length(ctx.result)
 		if err_len > 0 {
 			fmt.print("Error message: \"", string(err_str), "\"\n")
@@ -215,7 +215,7 @@ subst $result
 	result := partcl.eval(&ctx, bad_script, len(bad_script))
 	if result == .FERROR {
 		fmt.println("Expected error evaluating script")
-		err_str := partcl.string(ctx.result)
+		err_str := partcl.to_string(ctx.result)
 		err_len := partcl.length(ctx.result)
 		if err_len > 0 {
 			fmt.println("Error message: \"", string(err_str), "\"")
@@ -230,7 +230,7 @@ subst $result
 	result = partcl.eval(&ctx, bad_script, len(bad_script))
 	if result == .FERROR {
 		fmt.println("Expected error evaluating script")
-		err_str := partcl.string(ctx.result)
+		err_str := partcl.to_string(ctx.result)
 		err_len := partcl.length(ctx.result)
 		if err_len > 0 {
 			fmt.println("Error message: \"", string(err_str), "\"")

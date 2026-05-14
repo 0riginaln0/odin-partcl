@@ -8,6 +8,7 @@ import "core:fmt"
 import "core:mem"
 import "core:os"
 import "core:strings"
+import "core:strconv"
 
 // Truthy values are all values except for "0" and empty string ""
 cmd_true :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {
@@ -15,7 +16,7 @@ cmd_true :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> part
 	defer partcl.free(val)
 
 	truthy: bool
-	s := partcl.string(val)
+	s := partcl.to_string(val)
 	if s == "" || s == "0" {
 		truthy = false
 	} else {
@@ -32,7 +33,7 @@ cmd_equal :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> par
 	defer partcl.free(val1)
 	defer partcl.free(val2)
 
-	equal := partcl.string(val1) == partcl.string(val2)
+	equal := partcl.to_string(val1) == partcl.to_string(val2)
 
 	return partcl.result(tcl, .FNORMAL, partcl.alloc(equal ? "1" : "0", 1))
 }
@@ -53,7 +54,7 @@ cmd_change_prompt :: proc "c" (
 	defer partcl.free(new_prompt_val)
 
 	context = runtime.default_context()
-	new_prompt_odin := strings.clone_from_cstring(partcl.string(new_prompt_val))
+	new_prompt_odin := strings.clone_from_cstring(partcl.to_string(new_prompt_val))
 
 	prompt_ptr := cast(^string)arg
 	prompt_ptr^ = new_prompt_odin
@@ -62,6 +63,59 @@ cmd_change_prompt :: proc "c" (
 }
 
 prompt: string = ">"
+
+// Extension for floating point math support
+to_f64 :: proc "c" (val: partcl.Value) -> (res: f64) {
+	if val == nil do return
+	context = runtime.default_context()
+	str_val := partcl.to_string(val)
+	res = strconv.parse_f64(string(str_val)) or_else 0
+	return
+}
+
+cmd_fmath :: proc "c" (tcl: ^partcl.Tcl, args: partcl.Value, arg: rawptr) -> partcl.Control_Flow {
+	cmd_val := partcl.list_at(args, 0)
+	a_val := partcl.list_at(args, 1)
+	b_val := partcl.list_at(args, 2)
+	defer partcl.free(cmd_val)
+	defer partcl.free(a_val)
+	defer partcl.free(b_val)
+
+	cmd := partcl.to_string(cmd_val)
+	a := to_f64(a_val)
+	b := to_f64(b_val)
+
+	buf: [64]byte
+	res: f64 = 0
+	is_comparison := false
+	bool_result: bool
+
+	switch cmd {
+		case "+.": res = a + b
+		case "-.": res = a - b
+		case "/.":
+			if b == 0 {
+				return partcl.result(tcl, .FERROR, partcl.alloc("division by zero", 16))
+			}
+			res = a / b
+		case "*.": res = a * b
+		case ">.": bool_result = a > b; is_comparison = true
+		case ">=.": bool_result = a >= b; is_comparison = true
+		case "<.": bool_result = a < b; is_comparison = true
+		case "<=.": bool_result = a <= b; is_comparison = true
+		case "==.": bool_result = a == b; is_comparison = true
+		case "!=.": bool_result = a != b; is_comparison = true
+	}
+
+	if is_comparison {
+		return partcl.result(tcl, .FNORMAL, partcl.alloc(bool_result ? "1" : "0", 1))
+	}
+	
+	context = runtime.default_context()
+	n := fmt.bprintf(buf[:], "%g", res)
+	fmt.println(n, len(n))
+	return partcl.result(tcl, .FNORMAL, partcl.alloc(cstring(&buf[0]), len(n)))
+}
 
 main :: proc() {
 	track: mem.Tracking_Allocator; mem.tracking_allocator_init(&track, context.allocator)
@@ -72,11 +126,22 @@ main :: proc() {
 
 	ctx: partcl.Tcl
 	partcl.init(&ctx)
-	defer partcl.destroy(&ctx)
+	defer {fmt.println("destroying..."); partcl.destroy(&ctx)}
 
 	partcl.register(&ctx, "true?", cmd_true, 2, nil)
 	partcl.register(&ctx, "equal?", cmd_equal, 3, nil)
 	partcl.register(&ctx, "change-prompt", cmd_change_prompt, 2, &prompt)
+
+  partcl.register(&ctx, "+.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, "-.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, "*.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, "/.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, ">.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, ">=.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, "<.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, "<=.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, "==.", cmd_fmath, 3, nil)
+  partcl.register(&ctx, "!=.", cmd_fmath, 3, nil)
 
 	stdin_stream := os.to_stream(os.stdin)
 	scanner: bufio.Scanner
@@ -103,12 +168,12 @@ main :: proc() {
 			result := partcl.eval(&ctx, script, len(script))
 
 			if result != .FERROR {
-				result_str := partcl.string(ctx.result)
+				result_str := partcl.to_string(ctx.result)
 				result_len := partcl.length(ctx.result)
 				fmt.println(string(result_str), result_len)
 			} else {
 				fmt.println("Error evaluating script")
-				err_str := partcl.string(ctx.result)
+				err_str := partcl.to_string(ctx.result)
 				err_len := partcl.length(ctx.result)
 				if err_len > 0 {
 					fmt.print("Error message: \"", string(err_str), "\"\n")

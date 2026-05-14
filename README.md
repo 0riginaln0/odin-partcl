@@ -40,7 +40,7 @@ main :: proc() {
 	result := partcl.eval(&ctx, script, len(script))
 
 	if result != .FERROR {
-		result_str := partcl.string(ctx.result)
+		result_str := partcl.to_string(ctx.result)
 		result_len := partcl.length(ctx.result)
 		fmt.println(string(result_str), result_len)
 		fmt.println(partcl.int(ctx.result))
